@@ -2,11 +2,11 @@ int leds_per_pixel = 3;
 int NUM_LEDS = 400;
 int NUM_BUCKETS = 20;
 int BUCKET_MAX = 100;
-int VISUAL_LED_SIZE = 8;
+int VISUAL_LED_SIZE = 6;
 int VISUAL_STRIP_THICKNESS = 4;
-int VISUAL_STRIP_LIGHTNESS = 32;
+int VISUAL_STRIP_LIGHTNESS = 0;
 int VISUAL_STRIP_OVERSCAN = 5; // strip extends x pixels above/below leds
-
+int VISUAL_LED_CLARITY = 10; // for drawing pixel glow
 
 int pixels_per_bucket = NUM_LEDS/NUM_BUCKETS;
 int LEDs_per_bucket = pixels_per_bucket * leds_per_pixel;
@@ -19,7 +19,8 @@ void setup() {
 }
 
 void draw() {
-  background(128);
+  surface.setTitle("FPS"+frameRate);
+  background(32);
   update_buckets();
   calculate_LEDs();
   draw_LEDs(100, 70, 600, 850);
@@ -119,10 +120,17 @@ void draw_LEDs(int minx, int miny, int maxx, int maxy) {
 
 void draw_LED(color col, int x, int y) {
   rectMode(CENTER);
-  fill(col);
   noStroke();
-  rect(x, y, VISUAL_LED_SIZE, VISUAL_LED_SIZE);
-  return;
+  color bright_col = lerpColor(col, #FFFFFF, 0.8);
+  for(int i=0; i< VISUAL_LED_CLARITY; i++){
+    //draw multiple circles to simulate a glow effect
+    // sizes from VISUAL_LED_SIZE*2 to VISUAL_LED_SIZE/2
+    float lerp_amount = float(i+1)/float(VISUAL_LED_CLARITY); // between small number and 1
+    float col_lerp_amount = lerp_amount * lerp_amount; // more realistic?
+    fill(lerpColor(col, bright_col, col_lerp_amount), int(lerp_amount*255));
+    float size = lerp(VISUAL_LED_SIZE*2, VISUAL_LED_SIZE/2, lerp_amount);
+    ellipse(x, y, size, size);
+  }
 }
 
 
