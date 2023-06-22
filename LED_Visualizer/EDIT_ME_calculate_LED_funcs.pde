@@ -3,20 +3,21 @@
   calculate_LEDs() will likely stay the same until optimization
   change pattern_1() and pattern_2() to change the look of the project
    - they each return a colour given an index, and will have access to a global time variable, so frameCount could be used (framerate instability shouldn't matter too much)
+   - right now the patterns are a very simple checker pattern (one pixel alternating between light and dark versions of blue (pattern_1) and yellow (pattern_2), but they have lots of malleability
 */
 
 color pattern_1(int idx) {
-  color out = color(50,30,250);
+  color out = #5357F2;
   if (idx%2 == 0) {
-    out = color(30,16,200);
+    out = #260FFF;
   }
   return out;
 }
 
 color pattern_2(int idx) {
-  color out = color(255,255,255);
+  color out = #F0E516;
   if (idx%2 == 0) {
-    out = color(255,255,200);
+    out = #FFF862;
   }
   return out;
 }
