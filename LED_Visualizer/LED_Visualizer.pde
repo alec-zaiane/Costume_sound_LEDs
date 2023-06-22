@@ -14,12 +14,12 @@ color strip[] = new color[NUM_LEDS];
 int buckets[] = new int[NUM_BUCKETS];
 
 void setup() {
-  size(1280, 920);
+  size(700, 920);
   frameRate(20);
 }
 
 void draw() {
-  surface.setTitle("FPS"+frameRate);
+  surface.setTitle("LED Visualizer | fps: "+frameRate);
   background(32);
   update_buckets();
   calculate_LEDs();
