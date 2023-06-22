@@ -1,60 +1,59 @@
 int leds_per_pixel = 3;
-int NUM_LEDS = 100;
-int NUM_BUCKETS = 5;
+int NUM_LEDS = 400;
+int NUM_BUCKETS = 20;
 int BUCKET_MAX = 100;
 int VISUAL_LED_SIZE = 8;
 int VISUAL_STRIP_THICKNESS = 4;
 int VISUAL_STRIP_LIGHTNESS = 32;
-int VISUAL_STRIP_OVERSCAN = 20; // strip extends x pixels above/below leds
+int VISUAL_STRIP_OVERSCAN = 5; // strip extends x pixels above/below leds
 
 
 int pixels_per_bucket = NUM_LEDS/NUM_BUCKETS;
 int LEDs_per_bucket = pixels_per_bucket * leds_per_pixel;
 color strip[] = new color[NUM_LEDS];
-int buckets[] = {10,25, 50, 75, 100};
+int buckets[] = new int[NUM_BUCKETS];
 
 void setup() {
   size(1280, 920);
+  frameRate(20);
 }
 
 void draw() {
   background(128);
-  //calculate_LEDs();
-  draw_LEDs(100, 70, 1180, 850);
+  update_buckets();
+  calculate_LEDs();
+  draw_LEDs(100, 70, 600, 850);
 }
 
 void calculate_LEDs() {
   int rolling_index = 0;
-  boolean forward = true;
-  for(int i=0; i<NUM_BUCKETS; i++){
-    float float_pattern_1 = float(pixels_per_bucket * buckets[i]) / float(BUCKET_MAX);
-    int num_pattern_1 = int(float_pattern_1);
-    float fractional_pattern_1 = float_pattern_1 - num_pattern_1;
-    int num_pattern_2 = pixels_per_bucket - num_pattern_1-1;
-    println("===");
-    println(num_pattern_1);
-    println(fractional_pattern_1);
-    println(num_pattern_2);
-    println((num_pattern_1 + num_pattern_2 + 1) == pixels_per_bucket);
-    println(rolling_index);
+  boolean forward = false; // reverse every 2nd strip (because of how they're wired up)
+  for (int i=0; i<NUM_BUCKETS; i++) {
+    // for each strip, draw a solid pattern_1 amount, then a transition pixel, then a solid pattern 2 amount. pattern_1_amount + 1 + pattern_2_amount *must* == the number of pixels per bucket
+    float throwaway_amount_pattern_1 = float(pixels_per_bucket*buckets[i])/float(BUCKET_MAX);
+    int full_pattern_1 = int(throwaway_amount_pattern_1); // amount of full pattern_1 pixels
+    if (full_pattern_1 == pixels_per_bucket){
+      full_pattern_1 -=1;
+    }
+    float transition_pattern_1_amount = throwaway_amount_pattern_1 - full_pattern_1; // how much of pattern_1 should be in the transition pixel?
+    float full_pattern_2 = pixels_per_bucket - full_pattern_1 - 1;
+    // if the strip is reversed, draw pattern_2 first
     if (!forward) {
-      for(int j=0; j<num_pattern_2; j++){
-         strip[rolling_index] = pattern_2(rolling_index);
-         rolling_index++;
+      for (int j=0; j<full_pattern_2; j++) {
+        strip[rolling_index] = pattern_2(rolling_index++);
       }
-      strip[rolling_index] = mix_pattern_percent(rolling_index, fractional_pattern_1);
-      rolling_index++;
+      // draw transition pixel
+      strip[rolling_index] = mix_pattern_percent(rolling_index++, transition_pattern_1_amount);
     }
-    for(int j=0; j<num_pattern_1; j++){
-      strip[rolling_index] = pattern_1(rolling_index);
-      rolling_index++;
+    // draw pattern_1
+    for (int j=0; j<full_pattern_1; j++) {
+      strip[rolling_index] = pattern_1(rolling_index++);
     }
-    if (forward){
-      strip[rolling_index] = mix_pattern_percent(rolling_index, fractional_pattern_1);
-      rolling_index++;
-      for(int j=0; j<num_pattern_2; j++){
-         strip[rolling_index] = pattern_2(rolling_index);
-         rolling_index++;
+    // draw transition and pattern2 if forward
+    if (forward) {
+      strip[rolling_index] = mix_pattern_percent(rolling_index++, transition_pattern_1_amount);
+      for (int j=0; j<full_pattern_2; j++) {
+        strip[rolling_index] = pattern_2(rolling_index++);
       }
     }
     forward = !forward;
@@ -62,17 +61,17 @@ void calculate_LEDs() {
 }
 
 color pattern_1(int idx) {
-  color out = #FFFFFF;
+  color out = color(50,30,250);
   if (idx%2 == 0) {
-    out *= 0.8;
+    out = color(30,16,200);
   }
   return out;
 }
 
 color pattern_2(int idx) {
-  color out = #FF00F0;
+  color out = color(255,255,255);
   if (idx%2 == 0) {
-    out *= 0.8;
+    out = color(255,255,200);
   }
   return out;
 }
@@ -80,9 +79,8 @@ color pattern_2(int idx) {
 color mix_pattern_percent(int idx, float mix_percent) {
   color col1 = pattern_1(idx);
   color col2 = pattern_2(idx);
-  col1 *= mix_percent;
-  col2 *= (1.0-mix_percent);
-  return col1+col2;
+  color out = lerpColor(col2, col1, mix_percent);
+  return out;
 }
 
 void draw_LEDs(int minx, int miny, int maxx, int maxy) {
@@ -97,35 +95,25 @@ void draw_LEDs(int minx, int miny, int maxx, int maxy) {
     int strip_xpos = (i*(xspan/(NUM_BUCKETS-1))) + minx;
     pushMatrix();
     translate(strip_xpos, miny);
-    if (!forward){
-      translate(0,yspan);
+    if (!forward) {
+      translate(0, yspan);
       rotate(PI);
     }
     stroke(VISUAL_STRIP_LIGHTNESS);
     strokeWeight(VISUAL_STRIP_THICKNESS);
     line(0, -VISUAL_STRIP_OVERSCAN, 0, yspan+VISUAL_STRIP_OVERSCAN);
     // draw pixels from 0 to yspan
-    for (int j=0; j<LEDs_per_bucket; j++){
+    int LED_yoff = yspan/(2*LEDs_per_bucket);
+    for (int j=0; j<LEDs_per_bucket; j++) {
       int LED_ypos = j*(yspan/(LEDs_per_bucket));
-      draw_LED(strip[0], 0, LED_ypos);
+      draw_LED(strip[rolling_index], 0, LED_ypos+LED_yoff);
+      if (j%3 == 2) {
+        rolling_index++;
+      }
     }
-    
+
     popMatrix();
     forward = !forward;
-    //for (int j=0; j<pixels_per_bucket; j++) {
-    //  int pixel_ypos = (j*(yspan/(pixels_per_bucket))) + miny;
-    //  if (!forward) {
-    //    pixel_ypos = maxy - pixel_ypos +(yspan/(pixels_per_bucket));
-    //  }
-    //  pixel_ypos += 17;
-    //  //draw_LED(strip[0], strip_xpos, pixel_ypos);
-    //  for (int k=0; k<leds_per_pixel; k++) {
-    //    int strip_index = j+(i*pixels_per_bucket);
-    //    int LED_y_offset = (k-1)*((yspan/(pixels_per_bucket))/2);
-    //    draw_LED(strip[strip_index], strip_xpos, pixel_ypos+LED_y_offset);
-    //  }
-    //}
-    //forward = !forward;
   }
 }
 
@@ -135,4 +123,18 @@ void draw_LED(color col, int x, int y) {
   noStroke();
   rect(x, y, VISUAL_LED_SIZE, VISUAL_LED_SIZE);
   return;
+}
+
+
+void update_buckets(){
+  // dummy function to update the values stored in buckets[] - in deployment this will be the FFT data
+  for(int i=0; i<NUM_BUCKETS; i++){
+    if(buckets[i] > 1){
+      buckets[i] -= random(0.7)*random(10);
+    }
+    if(random(1) > 0.9){
+      buckets[i] = max(int(random(BUCKET_MAX)),buckets[i]);
+    }
+    buckets[i] = max(buckets[i],0);
+  }
 }
