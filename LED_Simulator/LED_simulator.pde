@@ -97,7 +97,7 @@ void update_buckets(){
     if(buckets[i] > 1){
       buckets[i] -= random(0.7)*random(10);
     }
-    if(random(1) > 0.9){
+    if(random(1) > 0.9 || buckets[i] < 1){
       buckets[i] = max(int(random(BUCKET_MAX)),buckets[i]);
     }
     buckets[i] = max(buckets[i],0);
