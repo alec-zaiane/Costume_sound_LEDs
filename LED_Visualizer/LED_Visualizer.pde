@@ -8,13 +8,14 @@ int VISUAL_STRIP_THICKNESS = 4; // thickness of the strips in the background
 int VISUAL_STRIP_LIGHTNESS = 0; // brightness value of the strips in the background
 int VISUAL_STRIP_OVERSCAN = 5;  // strip extends x pixels above/below leds
 int VISUAL_LED_CLARITY = 4;    // for drawing LED glow, heavily affects performance, set to 1 to draw LEDs solidly
+int DISPLAY_MODE = 0;
 
 // dont' edit these globals
 int pixels_per_bucket = NUM_LEDS/NUM_BUCKETS;
 int LEDs_per_bucket = pixels_per_bucket * leds_per_pixel;
 color strip[] = new color[NUM_LEDS];
 int buckets[] = new int[NUM_BUCKETS];
-
+int hueRotate = 0;
 /*
   this file contains code for visualizing the LED array, if you want to change the layout (# of LEDs or # per strip, etc), the variables are above
   if you want to change the patterns and colours, the code for that is in `EDIT_ME_calculate_LED_funcs.pde`
