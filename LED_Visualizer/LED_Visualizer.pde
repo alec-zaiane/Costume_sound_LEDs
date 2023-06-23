@@ -1,5 +1,5 @@
 // edit these globals to change the layout of the rendering
-int leds_per_pixel = 3;         // how many LEDs per pixel (causes alignment issues when !=3 due to the forwards/backwards rendering)
+int leds_per_pixel = 3;         // how many LEDs per pixel
 int NUM_LEDS = 400;             // how many pixels total (not number of LEDs)
 int NUM_BUCKETS = 20;           // how many buckets (and strips) there are
 int BUCKET_MAX = 100;           // max value for the buckets
@@ -7,7 +7,7 @@ int VISUAL_LED_SIZE = 6;        // how big the LEDs are
 int VISUAL_STRIP_THICKNESS = 4; // thickness of the strips in the background
 int VISUAL_STRIP_LIGHTNESS = 0; // brightness value of the strips in the background
 int VISUAL_STRIP_OVERSCAN = 5;  // strip extends x pixels above/below leds
-int VISUAL_LED_CLARITY = 10;    // for drawing LED glow, heavily affects performance, set to 1 to draw LEDs solidly
+int VISUAL_LED_CLARITY = 4;    // for drawing LED glow, heavily affects performance, set to 1 to draw LEDs solidly
 
 // dont' edit these globals
 int pixels_per_bucket = NUM_LEDS/NUM_BUCKETS;
@@ -31,6 +31,7 @@ void draw() {
   update_buckets();
   calculate_LEDs();
   draw_LEDs(100, 70, 600, 850);
+  //draw_LEDs(100,70,mouseX,mouseY);
 }
 
 // draws the strips and the LEDs on top of it
@@ -54,9 +55,9 @@ void draw_LEDs(int minx, int miny, int maxx, int maxy) {
     strokeWeight(VISUAL_STRIP_THICKNESS);
     line(0, -VISUAL_STRIP_OVERSCAN, 0, yspan+VISUAL_STRIP_OVERSCAN);
     // draw pixels from 0 to yspan
-    int LED_yoff = yspan/(2*LEDs_per_bucket);
+    int LED_yoff = int(float(yspan)/float(2*LEDs_per_bucket));
     for (int j=0; j<LEDs_per_bucket; j++) {
-      int LED_ypos = j*(yspan/(LEDs_per_bucket));
+      int LED_ypos = int(j*(float(yspan)/float(LEDs_per_bucket)));
       draw_LED(strip[rolling_index], 0, LED_ypos+LED_yoff);
       if (j%leds_per_pixel == (leds_per_pixel-1)) {
         rolling_index++;
