@@ -9,24 +9,29 @@ FASTLED_USING_NAMESPACE
 #define NUM_LEDS 100
 CRGB leds[NUM_LEDS];
 
-#define BRIGHTNESS 96
+#define BRIGHTNESS 50
 #define FPS 50
 
 #define NUM_BUCKETS 5
 #define BUCKET_MAX 100
-short bucket_length = NUM_LEDS / NUM_BUCKETS;
+const short bucket_length = NUM_LEDS / NUM_BUCKETS;
 short freq_buckets[] = { 10, 25, 50, 75, 100 };
+int prev_millis = 0;
 
 void setup() {
   // put your setup code here, to run once:
   delay(3000);
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   FastLED.setBrightness(BRIGHTNESS);
+  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(9600);
 }
 
 uint8_t gHue = 0;  // rotating "base color" used by many of the patterns
 
 void loop() {
+  Serial.println(millis() - prev_millis);
+  prev_millis = millis();
   FastLED.clear();
   // put your main code here, to run repeatedly:
   disp_buckets();
@@ -39,29 +44,31 @@ void loop() {
 
 void disp_buckets() {
   // display frequency buckets onto the LED strip
-  short rolling_index = 0;
+  // directly adapted from simulator code
+  short rolling_index = -1; // TODO figure out why this is -1 here and 0 in java
   bool forward = true;
-  for (short i = 0; i < NUM_BUCKETS; i++) {
-    float float_pattern_1 = float(bucket_length * freq_buckets[i]) / float(BUCKET_MAX);
-    short num_pattern_1 = short(float_pattern_1);                    // round down
-    float fractional_pattern_1 = float_pattern_1 - num_pattern_1;  // set to number [0,1), acts as the % it should be pattern 1
-    short num_pattern_2 = bucket_length - num_pattern_1;
-    if (!forward) {  // if not forward, draw pattern 2 first
-      for (short j = 0; j < num_pattern_2; j++) {
+  for(int i=0; i<NUM_BUCKETS; i++){
+    //for each strip, draw a solid pattern_1 amount, then a transition pixel, then a solid pattern_2 amount
+    float throwaway_amount_pattern_1 = float(bucket_length*freq_buckets[i]) / float(BUCKET_MAX);
+    int full_pattern_1 = int(throwaway_amount_pattern_1);
+    if(full_pattern_1 == bucket_length) {
+      full_pattern_1 -=1;
+    }
+    float transition_pattern_1_amount = throwaway_amount_pattern_1 - full_pattern_1;
+    float full_pattern_2 = bucket_length - full_pattern_1 - 1; // 1 for the transition pixel
+    // if the strip is reversed, draw pattern_2 first
+    if (!forward) {
+      for(int j=0; j<full_pattern_2; j++){
         leds[rolling_index] = pattern_2(rolling_index++);
       }
-      // then show mixed pixel
-      leds[rolling_index] = mix_pattern_percent(rolling_index++, fractional_pattern_1);
+      leds[rolling_index] = mix_pattern_percent(rolling_index++, transition_pattern_1_amount);
     }
-    // draw pattern 1
-    for (short j = 0; j < num_pattern_1; j++) {
+    for(int j=0; j<full_pattern_1; j++){
       leds[rolling_index] = pattern_1(rolling_index++);
     }
-    if (forward) {
-      // show mixed pixel
-      leds[rolling_index] = mix_pattern_percent(rolling_index++, fractional_pattern_1);
-      // show pattern 2
-      for (short j = 0; j < num_pattern_2; j++) {
+    if (forward){
+      leds[rolling_index] = mix_pattern_percent(rolling_index++, transition_pattern_1_amount);
+      for(int j=0; j<full_pattern_2; j++) {
         leds[rolling_index] = pattern_2(rolling_index++);
       }
     }
@@ -70,19 +77,20 @@ void disp_buckets() {
 }
 
 CRGB mix_pattern_percent(short index, float fraction) {
+  return CRGB::Green;
   //mix between fraction % of pattern 1 and (1-fraction%) of pattern 2 at index
   //TODO
-  CRGB p1 = pattern_1(index);
-  p1 *= fraction;
-  CRGB p2 = pattern_2(index);
-  p2 *= (1.0 - fraction);
-  return p1 + p2;
+  // CRGB p1 = pattern_1(index);
+  // p1 *= fraction;
+  // CRGB p2 = pattern_2(index);
+  // p2 *= (1.0 - fraction);
+  // return p1 + p2;
 }
 
 CRGB pattern_1(short index) {
   CRGB out = CRGB::White;
   if(index % 2 == 0){
-    out *= 0.7;
+    out = CRGB::WhiteSmoke;
   }
   return out;
 }
@@ -90,7 +98,7 @@ CRGB pattern_1(short index) {
 CRGB pattern_2(short index) {
   CRGB out = CRGB::Red;
   if(index % 2 == 0){
-    out *= 0.7;
+    out = CRGB::OrangeRed;
   }
   return out;
 }
