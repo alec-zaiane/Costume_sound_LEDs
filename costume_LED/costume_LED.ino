@@ -94,16 +94,16 @@ CRGB mix_pattern_percent(short index, unsigned char amount) {
 }
 
 CRGB pattern_1(short index) {
-  CRGB out = CRGB::White;
-  if(index % 2 == 0){
-    out = CRGB::WhiteSmoke;
+  CRGB out = CRGB::Cyan;
+  if(index % 3 == 0){
+    out = CRGB::SlateBlue;
   }
   return out;
 }
 
 CRGB pattern_2(short index) {
   CRGB out = CRGB::Red;
-  if(index % 2 == 0){
+  if(index % 3 == 0){
     out = CRGB::OrangeRed;
   }
   return out;
