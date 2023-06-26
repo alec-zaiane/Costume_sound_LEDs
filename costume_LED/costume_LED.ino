@@ -65,7 +65,7 @@ void disp_buckets() {
   for(short i=0; i<NUM_BUCKETS; i++){
     //calculate full pattern amounts and transition 
     full_pattern_1 = freq_buckets[i]/(256/BUCKET_LENGTH);
-    transition_amount = (full_pattern_1 == BUCKET_LENGTH) ? 255 : 19 * (freq_buckets[i] % (256/19)); // set to 255 if full_pattern_1 is full
+    transition_amount = (full_pattern_1 == BUCKET_LENGTH) ? 255 : BUCKET_LENGTH * (freq_buckets[i] % (256/BUCKET_LENGTH)); // set to 255 if full_pattern_1 is full
     full_pattern_2 = BUCKET_LENGTH - full_pattern_1 -1;
     //for each strip, draw a solid pattern_1 amount, then a transition pixel, then a solid pattern_2 amount
     if(full_pattern_1 == BUCKET_LENGTH) {full_pattern_1 -=1;} // subtract one so that the transition pixel can still be drawn (it is already set to 255)
