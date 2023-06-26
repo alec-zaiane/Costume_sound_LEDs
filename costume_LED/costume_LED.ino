@@ -15,7 +15,7 @@ CRGB leds[NUM_LEDS];
 #define NUM_BUCKETS 5
 const unsigned char BUCKET_LENGTH = NUM_LEDS / NUM_BUCKETS; // TODO make this a compiler define later
 // each bucket is out of 255
-unsigned char freq_buckets[] = { 50, 64, 128, 184, 255};//, 25, 60, 80, 9, 55, 11, 23, 84, 92, 99, 50, 44, 80, 10, 34 };
+unsigned char freq_buckets[] = {50,54,56,58,62};//{ 50, 64, 128, 184, 255};//, 25, 60, 80, 9, 55, 11, 23, 84, 92, 99, 50, 44, 80, 10, 34 };
 
 void setup() {
   // put your setup code here, to run once:
@@ -37,7 +37,6 @@ void update_buckets(){
       freq_buckets[i] = max(int(random(255)), freq_buckets[i]);
     }
   }
-  
 }
 
 uint8_t gHue = 0;  // rotating "base color" used by many of the patterns
@@ -54,6 +53,7 @@ void loop() {
     update_buckets();
   }  // slowly cycle the "base color" through the rainbow
 }
+
 
 
 void disp_buckets() {
@@ -90,14 +90,7 @@ void disp_buckets() {
 }
 
 CRGB mix_pattern_percent(short index, unsigned char amount) {
-  return CRGB::Green;
-  //mix between fraction % of pattern 1 and (1-fraction%) of pattern 2 at index
-  //TODO
-  // CRGB p1 = pattern_1(index);
-  // p1 *= fraction;
-  // CRGB p2 = pattern_2(index);
-  // p2 *= (1.0 - fraction);
-  // return p1 + p2;
+  return blend(pattern_2(index),pattern_1(index), amount);
 }
 
 CRGB pattern_1(short index) {
